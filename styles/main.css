@@ -659,6 +659,128 @@ textarea {
   font-weight: 600;
 }
 
+/* 괘 강독 선택 바 */
+.study-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block-start: 0.85rem;
+}
+
+.study-nav-bar .select-wrap {
+  flex: 1;
+}
+
+.study-hex-select {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.study-hex-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  margin-block: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .study-hex-layout {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.study-hex-visual-col {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.study-hex-info-col {
+  flex: 1;
+}
+
+.study-hex-name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.study-hex-summary {
+  margin: 0.65rem 0 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* 고전 강독 인용 박스 */
+.classic-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-block-end: 0.35rem;
+}
+
+.classic-badge-daxiang {
+  background-color: var(--secondary-accent-soft);
+  color: var(--secondary-accent);
+}
+
+.classic-quote-box {
+  padding: 1.15rem 1.35rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-subtle);
+  border-inline-start: 4px solid var(--accent);
+  margin-block-start: 0.75rem;
+}
+
+.classic-quote-box.daxiang-quote-box {
+  border-inline-start-color: var(--secondary-accent);
+}
+
+.classic-quote-box .classic-original {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  margin-block: 0 0.35rem;
+}
+
+.classic-quote-box.daxiang-quote-box .classic-original {
+  color: var(--secondary-accent);
+}
+
+.classic-quote-box .classic-reading {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-block: 0 0.65rem;
+}
+
+.classic-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin-block: 0.65rem 0.85rem;
+  opacity: 0.6;
+}
+
+.classic-quote-box .classic-meaning {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+.btn-completed {
+  border-color: var(--success) !important;
+  color: var(--success) !important;
+  background-color: var(--success-bg) !important;
+}
+
 .classics-block {
   display: flex;
   flex-direction: column;
@@ -1105,6 +1227,13 @@ textarea {
   flex-direction: column;
   gap: 0.4rem;
   font-size: 0.92rem;
+}
+
+.history-summary-text {
+  margin: 0.5rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
 }
 
 .history-note-box {

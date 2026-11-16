@@ -1,4 +1,4 @@
-// 일일 주역 웹 애플리케이션 메인 컨트롤러
+// 주역 강독과 한자 공부 웹 애플리케이션 메인 컨트롤러
 (function (global) {
   'use strict';
 
@@ -8,25 +8,23 @@
   const HANJA_DICT = ns.HANJA_DICT || {};
   const HEXAGRAMS = ns.HEXAGRAMS || [];
   const HEXAGRAM_BY_NUM = ns.HEXAGRAM_BY_NUM || {};
-  const HEXAGRAM_CLASSICS = ns.HEXAGRAM_CLASSICS || {};
   const iching = ns.iching;
   const storage = ns.storage;
   const quiz = ns.quiz;
 
-  const LINE_NAMES = ['1효 (초효)', '2효 (이효)', '3효 (삼효)', '4효 (사효)', '5효 (오효)', '6효 (상효)'];
   const TAB_TITLES = {
-    'tab-today': '오늘의 괘 | 일일 주역',
-    'tab-hanja': '한자 공부 | 일일 주역',
-    'tab-quiz': '복습 퀴즈 | 일일 주역',
-    'tab-history': '나의 기록 | 일일 주역',
-    'tab-encyclopedia': '64괘 도감 | 일일 주역',
-    'tab-help': '도움말 | 일일 주역'
+    'tab-today': '오늘의 강독 | 주역 강독과 한자 공부',
+    'tab-hanja': '한자 공부 | 주역 강독과 한자 공부',
+    'tab-quiz': '복습 퀴즈 | 주역 강독과 한자 공부',
+    'tab-history': '나의 학습장 | 주역 강독과 한자 공부',
+    'tab-encyclopedia': '64괘 강독 | 주역 강독과 한자 공부',
+    'tab-help': '주역 입문 | 주역 강독과 한자 공부'
   };
 
   // 현재 앱 상태
   const appState = {
     currentReading: null,
-    coinThrows: [],
+    currentHexNum: 1,
     pendingDeleteId: null,
     quizSession: null
   };
@@ -61,111 +59,21 @@
     return Number(parts[0]) + '년 ' + Number(parts[1]) + '월 ' + Number(parts[2]) + '일';
   }
 
-  // 오늘의 괘와 연관된 한자 목록 추출 (중복 제거)
+  // 현재 강독 괘와 연관된 한자 목록 추출
   function getReadingHanjaChars(reading) {
-    if (!reading || !reading.baseHexagram) return [];
-    const seen = {};
-    const list = [];
-
-    function pushChars(arr) {
-      (arr || []).forEach(function (ch) {
-        if (HANJA_DICT[ch] && !seen[ch]) {
-          seen[ch] = true;
-          list.push(ch);
-        }
-      });
+    if (!reading) return [];
+    const hex = reading.hexagram || reading.baseHexagram;
+    if (hex && Array.isArray(hex.hanja)) {
+      return hex.hanja.filter(function (ch) { return Boolean(HANJA_DICT[ch]); });
     }
-
-    pushChars(reading.baseHexagram.hanja);
-    const baseClassics = HEXAGRAM_CLASSICS[reading.baseHexagram.num];
-    if (baseClassics) {
-      pushChars(baseClassics.classicHanja);
-    }
-    if (reading.targetHexagram) {
-      pushChars(reading.targetHexagram.hanja);
-      const targetClassics = HEXAGRAM_CLASSICS[reading.targetHexagram.num];
-      if (targetClassics) {
-        pushChars(targetClassics.classicHanja);
-      }
-    }
-    return list;
-  }
-
-  function appendClassicPassage(parent, label, original, reading, meaning) {
-    const box = el('div', 'gua-quote-box');
-    box.appendChild(el('span', 'quote-label', label));
-    const orig = el('p', 'classic-original', original);
-    orig.setAttribute('lang', 'zh-Hant');
-    box.appendChild(orig);
-    box.appendChild(el('p', 'muted-text classic-reading', '음독: ' + reading));
-    box.appendChild(el('p', 'quote-text classic-meaning', meaning));
-    parent.appendChild(box);
-  }
-
-  function appendClassicHanjaChips(parent, chars) {
-    const heading = el('h3', 'classics-hanja-heading', '이 괘의 괘사·대상전 핵심 한자');
-    parent.appendChild(heading);
-    const grid = el('div', 'hanja-chip-grid');
-    (chars || []).forEach(function (ch) {
-      const entry = HANJA_DICT[ch];
-      if (!entry) return;
-      const card = el('div', 'hanja-mini-card');
-      const glyph = el('span', 'hanja-glyph-lg', entry.char);
-      glyph.setAttribute('lang', 'zh-Hant');
-      card.appendChild(glyph);
-      card.appendChild(el('span', 'hanja-reading', entry.meaning + ' ' + entry.sound));
-      card.appendChild(el('span', 'hanja-sub-meta', entry.radical));
-      grid.appendChild(card);
-    });
-    parent.appendChild(grid);
-  }
-
-  function appendHexClassicsContent(parent, hexNum, options) {
-    const classic = HEXAGRAM_CLASSICS[hexNum];
-    if (!parent || !classic) return false;
-    const rolePrefix = options && options.roleLabel ? options.roleLabel + ' ' : '';
-    appendClassicPassage(
-      parent,
-      rolePrefix + '괘사(卦辭)',
-      classic.guaOriginal,
-      classic.guaReading,
-      classic.guaMeaning
-    );
-    appendClassicPassage(
-      parent,
-      rolePrefix + '대상전(大象傳)',
-      classic.daXiangOriginal,
-      classic.daXiangReading,
-      classic.daXiangMeaning
-    );
-    if (!options || options.showHanja !== false) {
-      appendClassicHanjaChips(parent, classic.classicHanja);
-    }
-    return true;
-  }
-
-  function collectClassicHanjaForNums(nums) {
-    const seen = {};
-    const list = [];
-    (nums || []).forEach(function (num) {
-      const classic = HEXAGRAM_CLASSICS[num];
-      if (!classic) return;
-      (classic.classicHanja || []).forEach(function (ch) {
-        if (!seen[ch] && HANJA_DICT[ch]) {
-          seen[ch] = true;
-          list.push(ch);
-        }
-      });
-    });
-    return list;
+    return [];
   }
 
   // 6효 시각화 막대 렌더링 (1=양효, 0=음효)
-  function renderHexVisual(container, linesBinary, changingIndices) {
+  function renderHexVisual(container, linesBinary) {
     clearEl(container);
-    const movingSet = new Set(changingIndices || []);
-    (linesBinary || []).forEach(function (bit, idx) {
-      const bar = el('div', 'hex-line-bar ' + (bit === 1 ? 'yang' : 'yin') + (movingSet.has(idx) ? ' is-changing' : ''));
+    (linesBinary || []).forEach(function (bit) {
+      const bar = el('div', 'hex-line-bar ' + (bit === 1 ? 'yang' : 'yin'));
       container.appendChild(bar);
     });
   }
@@ -204,7 +112,7 @@
         }
       });
 
-      document.title = TAB_TITLES[targetTab.id] || '일일 주역';
+      document.title = TAB_TITLES[targetTab.id] || '주역 강독과 한자 공부';
       targetTab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
       if (shouldFocus) {
@@ -244,7 +152,6 @@
       });
     });
 
-    // 브라우저 페이지 내 찾기(Ctrl/Cmd+F)로 숨김 패널 검색 시 자동 전환
     panels.forEach(function (panel) {
       panel.addEventListener('beforematch', function () {
         const tabId = panel.getAttribute('aria-labelledby');
@@ -257,152 +164,70 @@
   }
 
   // ==========================================
-  // 2. 오늘의 괘 작괘 및 풀이 렌더링
+  // 2. 오늘의 강독 렌더링 및 네비게이션
   // ==========================================
   function renderReading(reading) {
-    const emptyCard = document.getElementById('today-empty-state');
-    const resultArea = document.getElementById('today-result-area');
+    if (!reading) return;
+    const hex = reading.hexagram || reading.baseHexagram || HEXAGRAM_BY_NUM[reading.hexNum || 1];
+    if (!hex) return;
 
-    if (!reading || !reading.baseHexagram) {
-      emptyCard.hidden = false;
-      resultArea.hidden = true;
-      return;
-    }
-
-    emptyCard.hidden = true;
-    resultArea.hidden = false;
-
-    const base = reading.baseHexagram;
-    const target = reading.targetHexagram;
-    const moving = reading.changingIndices || [];
-
+    // 메타 바
     document.getElementById('reading-date-tag').textContent = formatKoreanDate(reading.date);
-    document.getElementById('reading-method-tag').textContent =
-      reading.method === 'coins' ? '동전 6회 작괘' : '바로 뽑기';
+    document.getElementById('reading-hex-tag').textContent = hex.num + '번째 괘 · ' + hex.name;
 
-    const questionEl = document.getElementById('reading-question-display');
-    if (reading.question) {
-      questionEl.textContent = '질문: ' + reading.question;
-      questionEl.hidden = false;
+    const completeBtn = document.getElementById('btn-toggle-complete');
+    if (reading.completed) {
+      completeBtn.textContent = '강독 완료됨';
+      completeBtn.classList.add('btn-completed');
     } else {
-      questionEl.hidden = true;
+      completeBtn.textContent = '강독 완료 체크';
+      completeBtn.classList.remove('btn-completed');
     }
 
-    // 본괘 카드
-    renderHexVisual(document.getElementById('base-hex-visual'), base.linesBinary, moving);
-    document.getElementById('base-hex-title').textContent =
-      base.num + '괘 ' + base.name + ' (' + base.hanjaName + ')';
+    // 괘 상징 시각화
+    renderHexVisual(document.getElementById('base-hex-visual'), hex.linesBinary);
+    document.getElementById('base-hex-title').textContent = hex.num + '괘 ' + hex.name + ' (' + hex.hanjaName + ')';
     document.getElementById('base-hex-trigrams').textContent =
-      '상괘 ' + base.upperTrigram.name + '(' + base.upperTrigram.nature + ') · 하괘 ' +
-      base.lowerTrigram.name + '(' + base.lowerTrigram.nature + ')';
+      '상괘 ' + hex.upperTrigram.name + '(' + hex.upperTrigram.nature + ') · 하괘 ' +
+      hex.lowerTrigram.name + '(' + hex.lowerTrigram.nature + ')';
 
     const baseKeywords = document.getElementById('base-hex-keywords');
     clearEl(baseKeywords);
-    base.keywords.forEach(function (kw) {
+    (hex.keywords || []).forEach(function (kw) {
       baseKeywords.appendChild(el('span', 'keyword-pill', kw));
     });
 
-    // 변화 요약 및 지괘 카드
-    const targetBox = document.getElementById('target-hex-box');
-    const changingBadge = document.getElementById('changing-summary-badge');
-    const ruleDesc = document.getElementById('changing-rule-desc');
+    document.getElementById('hex-summary-text').textContent = hex.summary;
 
-    changingBadge.textContent = reading.focus.ruleTitle;
-    ruleDesc.textContent = reading.focus.ruleDesc;
+    // 괘사 (卦辭)
+    document.getElementById('hex-gua-original').textContent = hex.guaOriginal;
+    document.getElementById('hex-gua-reading').textContent = '음독: ' + hex.guaReading;
+    document.getElementById('hex-gua-meaning').textContent = hex.guaMeaning;
 
-    if (target) {
-      targetBox.classList.remove('is-static-target');
-      renderHexVisual(document.getElementById('target-hex-visual'), target.linesBinary, moving);
-      document.getElementById('target-hex-title').textContent =
-        target.num + '괘 ' + target.name + ' (' + target.hanjaName + ')';
-      document.getElementById('target-hex-trigrams').textContent =
-        '상괘 ' + target.upperTrigram.name + '(' + target.upperTrigram.nature + ') · 하괘 ' +
-        target.lowerTrigram.name + '(' + target.lowerTrigram.nature + ')';
-      const targetKeywords = document.getElementById('target-hex-keywords');
-      clearEl(targetKeywords);
-      target.keywords.forEach(function (kw) {
-        targetKeywords.appendChild(el('span', 'keyword-pill', kw));
-      });
-    } else {
-      targetBox.classList.add('is-static-target');
-      renderHexVisual(document.getElementById('target-hex-visual'), base.linesBinary, []);
-      document.getElementById('target-hex-title').textContent = '변화 없음 (본괘 유지)';
-      document.getElementById('target-hex-trigrams').textContent = '변효가 없어 본괘의 기운이 그대로 이어집니다.';
-      clearEl(document.getElementById('target-hex-keywords'));
-    }
+    // 대상전 (大象傳)
+    document.getElementById('hex-daxiang-original').textContent = hex.daXiangOriginal;
+    document.getElementById('hex-daxiang-reading').textContent = '음독: ' + hex.daXiangReading;
+    document.getElementById('hex-daxiang-meaning').textContent = hex.daXiangMeaning;
 
-    // 괘 의미 및 괘사
-    document.getElementById('hex-summary-text').textContent = base.summary;
-    document.getElementById('hex-guatext').textContent = base.guaText;
+    // 원문 속 핵심 한자 미리보기
+    renderTodayHanjaPreview(reading);
 
-    const classicsBlock = document.getElementById('hex-classics-block');
-    clearEl(classicsBlock);
-    if (!HEXAGRAM_CLASSICS[base.num]) {
-      classicsBlock.hidden = true;
-    } else {
-      classicsBlock.hidden = false;
-      appendHexClassicsContent(classicsBlock, base.num, { showHanja: false });
-      if (target && target.num !== base.num && HEXAGRAM_CLASSICS[target.num]) {
-        classicsBlock.appendChild(el('h3', 'classics-hanja-heading', '지괘 괘사·대상전'));
-        appendHexClassicsContent(classicsBlock, target.num, { roleLabel: '지괘', showHanja: false });
-      }
-      const classicNums = [base.num];
-      if (target && target.num !== base.num) {
-        classicNums.push(target.num);
-      }
-      const classicChars = collectClassicHanjaForNums(classicNums);
-      if (classicChars.length > 0) {
-        classicsBlock.appendChild(el('h3', 'classics-hanja-heading', '오늘 괘의 괘사·대상전 핵심 한자'));
-        appendClassicHanjaChips(classicsBlock, classicChars);
-      }
-    }
-
-    // 변효 말씀 영역
-    const changingSection = document.getElementById('changing-lines-section');
-    const changingList = document.getElementById('changing-lines-list');
-    clearEl(changingList);
-
-    if (moving.length > 0) {
-      changingSection.hidden = false;
-      moving.forEach(function (idx) {
-        const lineData = base.lines[idx];
-        const isFocus = reading.focus.primaryLineIndex === idx;
-        const card = el('article', 'line-advice-card' + (isFocus ? ' is-primary-focus' : ''));
-        const headingText = lineData.title + (isFocus ? ' — 오늘의 핵심 지침' : ' — 변효 참고');
-        card.appendChild(el('h4', 'line-advice-title', headingText));
-        card.appendChild(el('p', 'line-advice-meaning', lineData.meaning));
-        card.appendChild(el('p', 'line-advice-action', '오늘의 행동: ' + lineData.action));
-        changingList.appendChild(card);
-      });
-    } else {
-      changingSection.hidden = true;
-    }
-
-    // 전체 6효 목록
+    // 6효 전체 해설
     const allLinesList = document.getElementById('all-lines-list');
     clearEl(allLinesList);
-    const movingSet = new Set(moving);
-    base.lines.forEach(function (lineData, idx) {
-      const row = el('div', 'line-item-row' + (movingSet.has(idx) ? ' is-moving' : ''));
-      row.appendChild(el('strong', '', lineData.title + (movingSet.has(idx) ? ' (변효)' : '')));
+    (hex.lines || []).forEach(function (lineData) {
+      const row = el('div', 'line-item-row');
+      row.appendChild(el('strong', '', lineData.title));
       row.appendChild(el('p', '', lineData.meaning));
-      row.appendChild(el('p', 'muted-text', '대응: ' + lineData.action));
+      row.appendChild(el('p', 'muted-text', '처신 지침: ' + lineData.action));
       allLinesList.appendChild(row);
     });
 
-    // 실생활 대응 4카드
-    document.getElementById('advice-attitude').textContent = base.advice.attitude;
-    document.getElementById('advice-work').textContent = base.advice.work;
-    document.getElementById('advice-relationship').textContent = base.advice.relationship;
-    document.getElementById('advice-caution').textContent = base.advice.caution;
-
-    // 오늘의 한자 미리보기
-    renderTodayHanjaPreview(reading);
-
-    // 메모/회고 입력값 채우기
-    document.getElementById('memo-input').value = reading.memo || '';
-    document.getElementById('reflection-input').value = reading.reflection || '';
-    document.getElementById('journal-save-feedback').textContent = '';
+    // 드롭다운 선택값 동기화
+    const select = document.getElementById('study-hex-select');
+    if (select) {
+      select.value = String(hex.num);
+    }
   }
 
   function renderTodayHanjaPreview(reading) {
@@ -412,6 +237,7 @@
 
     chars.forEach(function (ch) {
       const entry = HANJA_DICT[ch];
+      if (!entry) return;
       const card = el('div', 'hanja-mini-card');
       const glyph = el('span', 'hanja-glyph-lg', entry.char);
       glyph.setAttribute('lang', 'zh-Hant');
@@ -422,140 +248,98 @@
     });
   }
 
-  // 작괘 완료 공통 처리
-  function applyNewThrows(throws, method) {
-    const questionInput = document.getElementById('question-input');
-    const rawReading = iching.buildReading(throws, {
-      question: questionInput.value,
-      method: method
+  function loadHexagramStudy(num, tabController) {
+    const targetNum = Math.min(64, Math.max(1, parseInt(num, 10) || 1));
+    const todayStr = iching.getLocalDateString(new Date());
+
+    const records = storage.getRecords();
+    const existing = records.find(function (r) {
+      return (r.hexNum === targetNum || r.baseNum === targetNum) && r.date === todayStr;
     });
-    storage.saveReadingRecord(rawReading);
-    const hydrated = iching.hydrateReading(rawReading);
-    appState.currentReading = hydrated;
 
-    // 오늘 뽑은 괘의 한자를 자동 학습 기록에 반영
-    const chars = getReadingHanjaChars(hydrated);
-    storage.markHanjaStudied(chars);
-
-    renderReading(hydrated);
-    announce(hydrated.baseHexagram.name + ' 괘가 도출되어 저장되었습니다.');
-  }
-
-  function updateCoinPreviewUI() {
-    const step = appState.coinThrows.length;
-    const stepLabel = document.getElementById('coin-step-label');
-    const progressText = document.getElementById('coin-progress-text');
-    const previewContainer = document.getElementById('coin-preview-lines');
-    const tossBtn = document.getElementById('btn-toss-coin');
-
-    progressText.textContent = step + ' / 6 효 완료';
-    if (step < 6) {
-      stepLabel.textContent = LINE_NAMES[step] + ' 던지기';
-      tossBtn.disabled = false;
-      tossBtn.textContent = (step + 1) + '효 동전 던지기';
+    let reading = null;
+    if (existing) {
+      reading = iching.hydrateReading(existing);
     } else {
-      stepLabel.textContent = '6효 모두 완성되었습니다';
-      tossBtn.disabled = true;
+      const raw = iching.buildStudyReading(targetNum, { date: todayStr });
+      reading = iching.hydrateReading(raw);
     }
 
-    clearEl(previewContainer);
-    appState.coinThrows.forEach(function (t, idx) {
-      const row = el('div', 'preview-line-row');
-      row.appendChild(el('span', 'preview-line-label', (idx + 1) + '효'));
-      const mini = el('div', 'hex-mini-lines');
-      mini.appendChild(el('div', 'hex-mini-bar ' + (t.isYang ? 'yang' : 'yin')));
-      row.appendChild(mini);
-      row.appendChild(el('span', '', t.value + ' (' + t.label + ')'));
-      previewContainer.appendChild(row);
-    });
+    appState.currentReading = reading;
+    appState.currentHexNum = targetNum;
+
+    // 강독 중인 괘의 한자 학습 자동 반영
+    const chars = getReadingHanjaChars(reading);
+    storage.markHanjaStudied(chars);
+
+    renderReading(reading);
+    renderTodayHanjaSection();
+    if (tabController) {
+      renderHistorySection(tabController);
+    }
+    announce(reading.hexagram.num + '괘 ' + reading.hexagram.name + ' 강독이 준비되었습니다.');
   }
 
   function initTodayTab(tabController) {
-    const quickBtn = document.getElementById('btn-quick-cast');
-    const coinModeBtn = document.getElementById('btn-coin-mode');
-    const coinArea = document.getElementById('coin-cast-area');
-    const tossBtn = document.getElementById('btn-toss-coin');
-    const resetCoinBtn = document.getElementById('btn-reset-coin');
-    const recastBtn = document.getElementById('btn-recast-today');
-    const journalForm = document.getElementById('journal-form');
-    const goHanjaBtn = document.getElementById('btn-go-hanja-tab');
+    const select = document.getElementById('study-hex-select');
+    const prevBtn = document.getElementById('btn-prev-hex');
+    const nextBtn = document.getElementById('btn-next-hex');
+    const randomBtn = document.getElementById('btn-random-hex');
+    const todayDefaultBtn = document.getElementById('btn-today-default');
+    const toggleCompleteBtn = document.getElementById('btn-toggle-complete');
+    const markTodayBtn = document.getElementById('btn-mark-today-studied');
     const goQuizBtn = document.getElementById('btn-go-quiz-today');
 
-    quickBtn.addEventListener('click', function () {
-      coinArea.hidden = true;
-      const throws = iching.castSixLines();
-      applyNewThrows(throws, 'quick');
-      document.getElementById('today-result-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // 64괘 선택기 옵션 채우기
+    clearEl(select);
+    HEXAGRAMS.forEach(function (h) {
+      const opt = el('option', '', h.num + '. ' + h.name + ' (' + h.hanjaName + ') — ' + (h.keywords.slice(0, 2).join(', ')));
+      opt.value = String(h.num);
+      select.appendChild(opt);
     });
 
-    coinModeBtn.addEventListener('click', function () {
-      appState.coinThrows = [];
-      const discs = document.querySelectorAll('#coin-visual-row .coin-disc');
-      discs.forEach(function (d) {
-        d.textContent = '?';
-        d.classList.remove('is-yang');
-      });
-      coinArea.hidden = false;
-      updateCoinPreviewUI();
-      tossBtn.focus();
+    select.addEventListener('change', function () {
+      loadHexagramStudy(this.value, tabController);
     });
 
-    tossBtn.addEventListener('click', function () {
-      if (appState.coinThrows.length >= 6) return;
-      const result = iching.tossThreeCoins();
-      appState.coinThrows.push(result);
-
-      const discs = document.querySelectorAll('#coin-visual-row .coin-disc');
-      result.coins.forEach(function (val, idx) {
-        if (!discs[idx]) return;
-        discs[idx].textContent = val === 3 ? '앞(3)' : '뒤(2)';
-        discs[idx].classList.toggle('is-yang', val === 3);
-      });
-
-      updateCoinPreviewUI();
-      announce(appState.coinThrows.length + '효 ' + result.label + '이 나왔습니다.');
-
-      if (appState.coinThrows.length === 6) {
-        const finalThrows = appState.coinThrows.slice();
-        applyNewThrows(finalThrows, 'coins');
-        global.setTimeout(function () {
-          coinArea.hidden = true;
-        }, 450);
-      }
+    prevBtn.addEventListener('click', function () {
+      const prevNum = (appState.currentHexNum - 2 + 64) % 64 + 1;
+      loadHexagramStudy(prevNum, tabController);
     });
 
-    resetCoinBtn.addEventListener('click', function () {
-      appState.coinThrows = [];
-      const discs = document.querySelectorAll('#coin-visual-row .coin-disc');
-      discs.forEach(function (d) {
-        d.textContent = '?';
-        d.classList.remove('is-yang');
-      });
-      updateCoinPreviewUI();
+    nextBtn.addEventListener('click', function () {
+      const nextNum = (appState.currentHexNum % 64) + 1;
+      loadHexagramStudy(nextNum, tabController);
     });
 
-    recastBtn.addEventListener('click', function () {
-      document.getElementById('cast-heading').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      quickBtn.focus();
+    randomBtn.addEventListener('click', function () {
+      const randomNum = Math.floor(Math.random() * 64) + 1;
+      loadHexagramStudy(randomNum, tabController);
     });
 
-    journalForm.addEventListener('submit', function (e) {
-      e.preventDefault();
+    todayDefaultBtn.addEventListener('click', function () {
+      const todayNum = iching.getDailyHexagramNum(new Date());
+      loadHexagramStudy(todayNum, tabController);
+    });
+
+    toggleCompleteBtn.addEventListener('click', function () {
       if (!appState.currentReading) return;
-      const memo = document.getElementById('memo-input').value.trim();
-      const reflection = document.getElementById('reflection-input').value.trim();
-      const updated = storage.updateRecordNotes(appState.currentReading.id, memo, reflection);
-      if (updated) {
-        appState.currentReading.memo = updated.memo;
-        appState.currentReading.reflection = updated.reflection;
-        const feedback = document.getElementById('journal-save-feedback');
-        feedback.textContent = '메모와 회고가 저장되었습니다.';
-        announce('오늘의 대응 메모와 회고가 저장되었습니다.');
-      }
+      appState.currentReading.completed = !appState.currentReading.completed;
+      storage.saveReadingRecord(appState.currentReading);
+      renderReading(appState.currentReading);
+      renderHistorySection(tabController);
+      announce(appState.currentReading.completed ? '오늘의 강독을 완료로 표시했습니다.' : '강독 완료를 취소했습니다.');
     });
 
-    goHanjaBtn.addEventListener('click', function () {
-      tabController.activateTab(document.getElementById('tab-hanja'), true);
+    markTodayBtn.addEventListener('click', function () {
+      const chars = getReadingHanjaChars(appState.currentReading);
+      if (chars.length === 0) {
+        announce('강독 괘를 먼저 선택해 주세요.');
+        return;
+      }
+      storage.markHanjaStudied(chars);
+      renderQuizStats();
+      announce('강독 괘 한자 ' + chars.length + '자를 복습장에 담았습니다.');
     });
 
     goQuizBtn.addEventListener('click', function () {
@@ -653,16 +437,19 @@
     searchInput.addEventListener('input', renderHanjaDictionary);
     categorySelect.addEventListener('change', renderHanjaDictionary);
 
-    document.getElementById('btn-mark-today-studied').addEventListener('click', function () {
-      const chars = getReadingHanjaChars(appState.currentReading);
-      if (chars.length === 0) {
-        announce('먼저 오늘의 괘를 뽑아주세요.');
-        return;
-      }
-      storage.markHanjaStudied(chars);
-      renderQuizStats();
-      announce('오늘의 괘 한자 ' + chars.length + '자를 복습장에 기록했습니다.');
-    });
+    const subMarkBtn = document.getElementById('btn-mark-today-studied-sub');
+    if (subMarkBtn) {
+      subMarkBtn.addEventListener('click', function () {
+        const chars = getReadingHanjaChars(appState.currentReading);
+        if (chars.length === 0) {
+          announce('강독 괘를 먼저 선택해 주세요.');
+          return;
+        }
+        storage.markHanjaStudied(chars);
+        renderQuizStats();
+        announce('강독 괘 한자 ' + chars.length + '자를 복습장에 담았습니다.');
+      });
+    }
   }
 
   // ==========================================
@@ -721,7 +508,7 @@
     const questions = quiz.buildMultipleChoiceQuestions(scope, todayChars, 10);
     if (questions.length === 0) {
       stageCard.hidden = false;
-      stageContent.appendChild(el('p', 'muted-text', '선택한 범위에 출제할 한자가 없습니다. 오답이 없다면 전체 또는 오늘의 괘 범위를 선택해 주세요.'));
+      stageContent.appendChild(el('p', 'muted-text', '선택한 범위에 출제할 한자가 없습니다. 다른 범위를 선택해 주세요.'));
       return;
     }
 
@@ -856,18 +643,19 @@
 
     const q = s.questions[s.index];
     const header = el('div', 'quiz-header-bar');
-    header.appendChild(el('span', '', '문제 ' + (s.index + 1) + ' / ' + s.questions.length));
-    header.appendChild(el('span', '', '현재 정답: ' + s.correctCount + '개'));
+    header.appendChild(el('span', '', '객관식 퀴즈 (' + (s.index + 1) + ' / ' + s.questions.length + ')'));
+    header.appendChild(el('span', '', '현재 점수: ' + s.correctCount + '점'));
     stageContent.appendChild(header);
 
+    const questionBox = el('div', 'quiz-question-box');
     const glyph = el('div', 'quiz-prompt-char', q.char);
     glyph.setAttribute('lang', 'zh-Hant');
-    stageContent.appendChild(glyph);
-    stageContent.appendChild(el('p', 'quiz-hint-text', '위 한자의 올바른 뜻과 음을 고르세요. (부수: ' + q.entry.radical + ')'));
+    questionBox.appendChild(glyph);
+    questionBox.appendChild(el('p', 'quiz-sub-prompt', '다음 한자의 올바른 음과 훈(뜻)을 고르세요.'));
+    stageContent.appendChild(questionBox);
 
     const optionsGrid = el('div', 'quiz-options-grid');
-    const feedbackBox = el('div', 'quiz-feedback-box');
-    feedbackBox.hidden = true;
+    const feedbackBox = el('div', 'quiz-step-feedback');
 
     q.options.forEach(function (opt) {
       const btn = el('button', 'quiz-option-btn', opt.label);
@@ -875,26 +663,25 @@
       btn.addEventListener('click', function () {
         if (s.answered) return;
         s.answered = true;
-        storage.recordHanjaReview(q.char, opt.isCorrect);
-        if (opt.isCorrect) s.correctCount += 1;
+        const isCorrect = opt.isCorrect;
+        storage.recordHanjaReview(q.char, isCorrect);
 
-        Array.from(optionsGrid.children).forEach(function (child, idx) {
-          child.disabled = true;
-          const item = q.options[idx];
-          if (item.isCorrect) {
-            child.classList.add('is-correct');
-          } else if (child === btn && !item.isCorrect) {
-            child.classList.add('is-wrong');
-          }
-        });
-
-        clearEl(feedbackBox);
-        feedbackBox.hidden = false;
-        feedbackBox.appendChild(el('strong', '', opt.isCorrect ? '정답입니다.' : '아쉽습니다. 정답은 "' + q.entry.meaning + ' ' + q.entry.sound + '"입니다.'));
-        feedbackBox.appendChild(el('p', '', q.entry.note));
-        if (q.entry.words && q.entry.words.length > 0) {
-          feedbackBox.appendChild(el('p', 'hanja-words', '관련 어휘: ' + q.entry.words.join(', ')));
+        if (isCorrect) {
+          s.correctCount += 1;
+          btn.classList.add('is-correct');
+          feedbackBox.appendChild(el('p', 'feedback-text is-correct', '정답입니다! ' + q.entry.char + ' : ' + q.entry.meaning + ' ' + q.entry.sound));
+        } else {
+          btn.classList.add('is-wrong');
+          feedbackBox.appendChild(el('p', 'feedback-text is-wrong', '오답입니다. 정답은 [' + q.entry.meaning + ' ' + q.entry.sound + '] 입니다.'));
+          Array.from(optionsGrid.children).forEach(function (child) {
+            if (child.textContent === q.entry.meaning + ' ' + q.entry.sound) {
+              child.classList.add('is-correct');
+            }
+          });
         }
+
+        const note = el('p', 'quiz-note-text', q.entry.note);
+        feedbackBox.appendChild(note);
 
         const nextWrap = el('div', 'quiz-actions-center');
         const nextBtn = el('button', 'btn btn-primary', s.index + 1 < s.questions.length ? '다음 문제' : '결과 확인하기');
@@ -928,7 +715,7 @@
   }
 
   // ==========================================
-  // 5. 나의 기록 탭
+  // 5. 나의 학습장 탭
   // ==========================================
   function renderHistorySection(tabController) {
     const records = storage.getRecords();
@@ -936,15 +723,14 @@
     const listContainer = document.getElementById('history-list');
 
     clearEl(statsBar);
-    const todayStr = iching.getLocalDateString(new Date());
-    const currentMonth = todayStr.slice(0, 7);
-    const monthCount = records.filter(function (r) { return (r.date || '').indexOf(currentMonth) === 0; }).length;
-    const reflectionCount = records.filter(function (r) { return Boolean(r.reflection && r.reflection.trim()); }).length;
+    const summary = storage.getProgressSummary();
+    const completedCount = records.filter(function (r) { return r.completed; }).length;
 
     [
-      { label: '전체 기록', value: records.length + '건' },
-      { label: '이번 달 기록', value: monthCount + '건' },
-      { label: '저녁 회고 작성', value: reflectionCount + '건' }
+      { label: '강독 완료 괘', value: completedCount + '괘' },
+      { label: '학습 목록 괘', value: records.length + '괘' },
+      { label: '학습한 한자', value: summary.studiedCount + '자' },
+      { label: '익힘 완료 한자', value: summary.masteredCount + '자' }
     ].forEach(function (t) {
       const tile = el('div', 'stat-tile');
       tile.appendChild(el('span', 'stat-label', t.label));
@@ -958,65 +744,50 @@
     const filtered = records.filter(function (rec) {
       if (monthFilter && (rec.date || '').indexOf(monthFilter) !== 0) return false;
       if (!query) return true;
-      const base = HEXAGRAM_BY_NUM[rec.baseNum];
-      const target = rec.targetNum ? HEXAGRAM_BY_NUM[rec.targetNum] : null;
+      const hexNum = rec.hexNum || rec.baseNum || 1;
+      const hex = HEXAGRAM_BY_NUM[hexNum];
       const searchable = [
-        rec.question || '',
-        rec.memo || '',
-        rec.reflection || '',
-        base ? base.name + ' ' + base.hanjaName : '',
-        target ? target.name + ' ' + target.hanjaName : ''
+        String(hexNum),
+        hex ? hex.name + ' ' + hex.hanjaName + ' ' + (hex.keywords || []).join(' ') + ' ' + (hex.summary || '') : ''
       ].join(' ').toLowerCase();
       return searchable.indexOf(query) !== -1;
     });
 
     clearEl(listContainer);
     if (filtered.length === 0) {
-      listContainer.appendChild(el('p', 'muted-text', records.length === 0 ? '아직 저장된 주역 기록이 없습니다. 오늘의 괘 탭에서 첫 기록을 남겨보세요.' : '검색 조건에 맞는 기록이 없습니다.'));
+      listContainer.appendChild(el('p', 'muted-text', records.length === 0 ? '아직 저장된 강독 이력이 없습니다. 오늘의 강독 탭에서 괘를 확인하고 완료를 체크해 보세요.' : '검색 조건에 맞는 기록이 없습니다.'));
       return;
     }
 
     filtered.forEach(function (rec) {
-      const base = HEXAGRAM_BY_NUM[rec.baseNum];
-      const target = rec.targetNum ? HEXAGRAM_BY_NUM[rec.targetNum] : null;
+      const hexNum = rec.hexNum || rec.baseNum || 1;
+      const hex = HEXAGRAM_BY_NUM[hexNum];
       const card = el('article', 'history-item-card');
 
       const header = el('div', 'history-item-header');
       const left = el('div');
       left.appendChild(el('span', 'tag', formatKoreanDate(rec.date)));
-      if (rec.changingPositions && rec.changingPositions.length > 0) {
-        const posLabel = el('span', 'tag tag-subtle', '변효 ' + rec.changingPositions.join(', ') + '효');
-        posLabel.style.marginInlineStart = '0.4rem';
-        left.appendChild(posLabel);
+
+      if (rec.completed) {
+        const compLabel = el('span', 'tag tag-subtle', '강독 완료');
+        compLabel.style.marginInlineStart = '0.4rem';
+        left.appendChild(compLabel);
       }
 
-      const titleStr = (base ? base.name + '(' + base.hanjaName + ')' : '') +
-        (target ? ' → ' + target.name + '(' + target.hanjaName + ')' : ' (변화 없음)');
+      const titleStr = hex ? hex.num + '괘 ' + hex.name + ' (' + hex.hanjaName + ')' : '주역 강독';
       left.appendChild(el('h3', 'history-item-title', titleStr));
       header.appendChild(left);
       card.appendChild(header);
 
-      const notes = el('div', 'history-notes');
-      if (rec.question) {
-        notes.appendChild(el('div', '', '질문: ' + rec.question));
-      }
-      if (rec.memo) {
-        notes.appendChild(el('div', 'history-note-box', '대응 다짐: ' + rec.memo));
-      }
-      if (rec.reflection) {
-        notes.appendChild(el('div', 'history-note-box', '저녁 회고: ' + rec.reflection));
-      }
-      if (notes.childNodes.length > 0) {
-        card.appendChild(notes);
+      if (hex && hex.summary) {
+        card.appendChild(el('p', 'history-summary-text', hex.summary));
       }
 
       const actions = el('div', 'history-item-actions');
-      const openBtn = el('button', 'btn btn-secondary btn-small', '오늘의 괘 화면에서 보기');
+      const openBtn = el('button', 'btn btn-secondary btn-small', '강독 화면에서 열기');
       openBtn.type = 'button';
       openBtn.addEventListener('click', function () {
-        const hydrated = iching.hydrateReading(rec);
-        appState.currentReading = hydrated;
-        renderReading(hydrated);
+        loadHexagramStudy(hexNum, tabController);
         if (tabController) {
           tabController.activateTab(document.getElementById('tab-today'), true);
         }
@@ -1034,12 +805,8 @@
         }
         storage.deleteRecord(rec.id);
         appState.pendingDeleteId = null;
-        if (appState.currentReading && appState.currentReading.id === rec.id) {
-          appState.currentReading = null;
-          renderReading(null);
-        }
         renderHistorySection(tabController);
-        announce('선택한 기록이 삭제되었습니다.');
+        announce('선택한 학습 기록이 삭제되었습니다.');
       });
       actions.appendChild(delBtn);
 
@@ -1073,12 +840,12 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'daily-iching-backup-' + iching.getLocalDateString(new Date()) + '.json';
+      a.download = 'iching-study-backup-' + iching.getLocalDateString(new Date()) + '.json';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      announce('기록 백업 파일을 다운로드했습니다.');
+      announce('학습 기록 백업 파일을 다운로드했습니다.');
     });
 
     document.getElementById('import-backup-input').addEventListener('change', function (e) {
@@ -1098,14 +865,65 @@
       };
       reader.readAsText(file, 'utf-8');
     });
-
-    renderHistorySection(tabController);
   }
 
   // ==========================================
-  // 6. 64괘 도감 및 상세 다이얼로그
+  // 6. 64괘 강독 도감 탭
   // ==========================================
-  function openHexDetailDialog(hex) {
+  function renderEncyclopediaGrid(tabController) {
+    const query = document.getElementById('hex-search-input').value.trim().toLowerCase();
+    const upperFilter = document.getElementById('hex-upper-select').value;
+    const lowerFilter = document.getElementById('hex-lower-select').value;
+    const grid = document.getElementById('hex-grid');
+    const countInfo = document.getElementById('hex-count-info');
+
+    clearEl(grid);
+    const filtered = HEXAGRAMS.filter(function (hex) {
+      if (upperFilter !== 'all' && hex.upper !== upperFilter) return false;
+      if (lowerFilter !== 'all' && hex.lower !== lowerFilter) return false;
+      if (!query) return true;
+      const searchable = [
+        String(hex.num),
+        hex.name,
+        hex.hanjaName,
+        hex.summary,
+        hex.guaOriginal || '',
+        hex.daXiangOriginal || '',
+        (hex.keywords || []).join(' ')
+      ].join(' ').toLowerCase();
+      return searchable.indexOf(query) !== -1;
+    });
+
+    countInfo.textContent = '총 ' + filtered.length + '개의 괘가 표시되었습니다.';
+    filtered.forEach(function (hex) {
+      const btn = el('button', 'hex-card-btn');
+      btn.type = 'button';
+      btn.setAttribute('aria-haspopup', 'dialog');
+
+      const header = el('div', 'hex-card-header');
+      header.appendChild(el('span', 'tag', hex.num + '괘'));
+      header.appendChild(el('span', 'hex-hanja-name', hex.hanjaName));
+      btn.appendChild(header);
+
+      btn.appendChild(renderMiniHexVisual(hex.linesBinary));
+      btn.appendChild(el('h3', 'hex-card-title', hex.name));
+      btn.appendChild(el('p', 'hex-card-trigrams', hex.upperTrigram.nature + ' · ' + hex.lowerTrigram.nature));
+      btn.appendChild(el('p', 'hex-card-summary', hex.summary));
+
+      const kwRow = el('div', 'keyword-row');
+      (hex.keywords || []).slice(0, 3).forEach(function (kw) {
+        kwRow.appendChild(el('span', 'keyword-pill', kw));
+      });
+      btn.appendChild(kwRow);
+
+      btn.addEventListener('click', function () {
+        openHexDetailDialog(hex, tabController);
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  function openHexDetailDialog(hex, tabController) {
     const dialog = document.getElementById('hex-detail-dialog');
     const numTag = document.getElementById('dialog-hex-num');
     const title = document.getElementById('dialog-hex-title');
@@ -1115,117 +933,91 @@
     title.textContent = hex.name + ' (' + hex.hanjaName + ')';
     clearEl(content);
 
+    // 바로 강독하기 액션 버튼
+    const topActionWrap = el('div', 'quiz-actions-center');
+    topActionWrap.style.marginBlockEnd = '1rem';
+    const studyNowBtn = el('button', 'btn btn-primary', '오늘의 강독으로 열기');
+    studyNowBtn.type = 'button';
+    studyNowBtn.addEventListener('click', function () {
+      dialog.close();
+      loadHexagramStudy(hex.num, tabController);
+      if (tabController) {
+        tabController.activateTab(document.getElementById('tab-today'), true);
+      }
+    });
+    topActionWrap.appendChild(studyNowBtn);
+    content.appendChild(topActionWrap);
+
+    // 괘 형상
     const visualWrap = el('div', 'hex-box');
     const linesWrap = el('div', 'hex-lines-visual');
-    renderHexVisual(linesWrap, hex.linesBinary, []);
+    renderHexVisual(linesWrap, hex.linesBinary);
     visualWrap.appendChild(linesWrap);
     const kwRow = el('div', 'keyword-row');
-    hex.keywords.forEach(function (kw) {
+    (hex.keywords || []).forEach(function (kw) {
       kwRow.appendChild(el('span', 'keyword-pill', kw));
     });
     visualWrap.appendChild(kwRow);
     content.appendChild(visualWrap);
 
     content.appendChild(el('p', 'lead-text', hex.summary));
-    const quoteBox = el('div', 'gua-quote-box');
-    quoteBox.appendChild(el('span', 'quote-label', '괘사 핵심'));
-    quoteBox.appendChild(el('p', 'quote-text', hex.guaText));
-    content.appendChild(quoteBox);
 
-    const classicsWrap = el('div', 'classics-block');
-    if (appendHexClassicsContent(classicsWrap, hex.num)) {
-      content.appendChild(classicsWrap);
-    }
+    // 괘사
+    const guaBox = el('div', 'classic-quote-box');
+    guaBox.appendChild(el('span', 'classic-badge', '괘사 (卦辭)'));
+    const guaOrig = el('p', 'classic-original', hex.guaOriginal);
+    guaOrig.setAttribute('lang', 'zh-Hant');
+    guaBox.appendChild(guaOrig);
+    guaBox.appendChild(el('p', 'classic-reading', '음독: ' + hex.guaReading));
+    guaBox.appendChild(el('div', 'classic-divider'));
+    guaBox.appendChild(el('p', 'classic-meaning', hex.guaMeaning));
+    content.appendChild(guaBox);
 
-    const adviceGrid = el('div', 'advice-grid');
-    [
-      { label: '오늘의 태도', text: hex.advice.attitude, isCaution: false },
-      { label: '업무와 결정', text: hex.advice.work, isCaution: false },
-      { label: '대인관계', text: hex.advice.relationship, isCaution: false },
-      { label: '주의할 점', text: hex.advice.caution, isCaution: true }
-    ].forEach(function (item) {
-      const box = el('div', 'advice-item' + (item.isCaution ? ' advice-caution' : ''));
-      box.appendChild(el('h3', '', item.label));
-      box.appendChild(el('p', '', item.text));
-      adviceGrid.appendChild(box);
-    });
-    content.appendChild(adviceGrid);
+    // 대상전
+    const daXiangBox = el('div', 'classic-quote-box daxiang-quote-box');
+    daXiangBox.appendChild(el('span', 'classic-badge classic-badge-daxiang', '대상전 (大象傳)'));
+    const dxOrig = el('p', 'classic-original', hex.daXiangOriginal);
+    dxOrig.setAttribute('lang', 'zh-Hant');
+    daXiangBox.appendChild(dxOrig);
+    daXiangBox.appendChild(el('p', 'classic-reading', '음독: ' + hex.daXiangReading));
+    daXiangBox.appendChild(el('div', 'classic-divider'));
+    daXiangBox.appendChild(el('p', 'classic-meaning', hex.daXiangMeaning));
+    content.appendChild(daXiangBox);
 
-    const linesHeading = el('h3', '', '6효 말씀');
-    content.appendChild(linesHeading);
-    const linesList = el('div', 'all-lines-list');
-    hex.lines.forEach(function (l) {
-      const row = el('div', 'line-item-row');
-      row.appendChild(el('strong', '', l.title));
-      row.appendChild(el('p', '', l.meaning));
-      row.appendChild(el('p', 'muted-text', '대응: ' + l.action));
-      linesList.appendChild(row);
-    });
-    content.appendChild(linesList);
-
-    const hanjaHeading = el('h3', '', '이 괘의 괘명·팔괘 한자');
-    content.appendChild(hanjaHeading);
-    const hanjaGrid = el('div', 'hanja-chip-grid');
-    (hex.hanja || []).forEach(function (ch) {
-      const entry = HANJA_DICT[ch];
-      if (!entry) return;
-      const card = el('div', 'hanja-mini-card');
-      const g = el('span', 'hanja-glyph-lg', entry.char);
-      g.setAttribute('lang', 'zh-Hant');
-      card.appendChild(g);
-      card.appendChild(el('span', 'hanja-reading', entry.meaning + ' ' + entry.sound));
-      card.appendChild(el('span', 'hanja-sub-meta', entry.radical));
-      hanjaGrid.appendChild(card);
-    });
-    content.appendChild(hanjaGrid);
-
-    if (typeof dialog.showModal === 'function') {
-      dialog.showModal();
-    } else {
-      dialog.setAttribute('open', 'open');
-    }
-  }
-
-  function renderEncyclopediaGrid() {
-    const query = document.getElementById('hex-search-input').value.trim().toLowerCase();
-    const upper = document.getElementById('hex-upper-select').value;
-    const lower = document.getElementById('hex-lower-select').value;
-    const grid = document.getElementById('hex-grid');
-    const countInfo = document.getElementById('hex-count-info');
-
-    clearEl(grid);
-    const filtered = HEXAGRAMS.filter(function (hex) {
-      if (upper !== 'all' && hex.upper !== upper) return false;
-      if (lower !== 'all' && hex.lower !== lower) return false;
-      if (!query) return true;
-      const haystack = (
-        hex.num + ' ' + hex.name + ' ' + hex.hanjaName + ' ' +
-        hex.keywords.join(' ') + ' ' + hex.summary
-      ).toLowerCase();
-      return haystack.indexOf(query) !== -1;
-    });
-
-    countInfo.textContent = '총 ' + filtered.length + '개의 괘가 표시되었습니다.';
-    filtered.forEach(function (hex) {
-      const btn = el('button', 'hex-grid-btn');
-      btn.type = 'button';
-
-      const top = el('div', 'hex-grid-top');
-      top.appendChild(el('span', 'tag tag-subtle', hex.num + '괘'));
-      top.appendChild(renderMiniHexVisual(hex.linesBinary));
-      btn.appendChild(top);
-
-      btn.appendChild(el('strong', '', hex.name + ' (' + hex.hanjaName + ')'));
-      btn.appendChild(el('span', 'muted-text', hex.upperTrigram.nature + ' · ' + hex.lowerTrigram.nature + ' | ' + hex.keywords.join(', ')));
-
-      btn.addEventListener('click', function () {
-        openHexDetailDialog(hex);
+    // 본문 속 한자
+    if (hex.hanja && hex.hanja.length > 0) {
+      content.appendChild(el('h3', 'classics-hanja-heading', '이 괘의 고전 한자'));
+      const hanjaGrid = el('div', 'hanja-chip-grid');
+      hex.hanja.forEach(function (ch) {
+        const entry = HANJA_DICT[ch];
+        if (!entry) return;
+        const card = el('div', 'hanja-mini-card');
+        const glyph = el('span', 'hanja-glyph-lg', entry.char);
+        glyph.setAttribute('lang', 'zh-Hant');
+        card.appendChild(glyph);
+        card.appendChild(el('span', 'hanja-reading', entry.meaning + ' ' + entry.sound));
+        card.appendChild(el('span', 'hanja-sub-meta', entry.radical));
+        hanjaGrid.appendChild(card);
       });
-      grid.appendChild(btn);
+      content.appendChild(hanjaGrid);
+    }
+
+    // 6효 전체
+    content.appendChild(el('h3', '', '6효(爻辭) 해설'));
+    const linesWrapList = el('div', 'all-lines-list');
+    (hex.lines || []).forEach(function (lineData) {
+      const row = el('div', 'line-item-row');
+      row.appendChild(el('strong', '', lineData.title));
+      row.appendChild(el('p', '', lineData.meaning));
+      row.appendChild(el('p', 'muted-text', '처신: ' + lineData.action));
+      linesWrapList.appendChild(row);
     });
+    content.appendChild(linesWrapList);
+
+    dialog.showModal();
   }
 
-  function initEncyclopediaTab() {
+  function initEncyclopediaTab(tabController) {
     const upperSelect = document.getElementById('hex-upper-select');
     const lowerSelect = document.getElementById('hex-lower-select');
     const searchInput = document.getElementById('hex-search-input');
@@ -1246,9 +1038,9 @@
     });
 
     filterForm.addEventListener('submit', function (e) { e.preventDefault(); });
-    searchInput.addEventListener('input', renderEncyclopediaGrid);
-    upperSelect.addEventListener('change', renderEncyclopediaGrid);
-    lowerSelect.addEventListener('change', renderEncyclopediaGrid);
+    searchInput.addEventListener('input', function () { renderEncyclopediaGrid(tabController); });
+    upperSelect.addEventListener('change', function () { renderEncyclopediaGrid(tabController); });
+    lowerSelect.addEventListener('change', function () { renderEncyclopediaGrid(tabController); });
 
     closeBtn.addEventListener('click', function () {
       dialog.close();
@@ -1260,11 +1052,11 @@
       }
     });
 
-    renderEncyclopediaGrid();
+    renderEncyclopediaGrid(tabController);
   }
 
   // ==========================================
-  // 7. 초기화
+  // 7. 초기화 (Bootstrap)
   // ==========================================
   function bootstrap() {
     const todayStr = iching.getLocalDateString(new Date());
@@ -1275,15 +1067,20 @@
     initHanjaTab();
     initQuizTab();
     initHistoryTab(tabController);
-    initEncyclopediaTab();
+    initEncyclopediaTab(tabController);
 
-    // 오늘 날짜로 이미 저장된 괘가 있으면 자동 복원
+    // 오늘 날짜로 이미 저장된 강독이 있으면 해당 괘 복원, 없으면 오늘 날짜 순환 추천 괘 로드
     const existingToday = storage.getLatestRecordForDate(todayStr);
     if (existingToday) {
-      appState.currentReading = iching.hydrateReading(existingToday);
-      renderReading(appState.currentReading);
+      const hydrated = iching.hydrateReading(existingToday);
+      appState.currentReading = hydrated;
+      appState.currentHexNum = hydrated.hexNum || hydrated.baseNum || 1;
+      storage.markHanjaStudied(hydrated.hexagram.hanja);
+      renderReading(hydrated);
+      renderTodayHanjaSection();
     } else {
-      renderReading(null);
+      const todayHexNum = iching.getDailyHexagramNum(new Date());
+      loadHexagramStudy(todayHexNum, tabController);
     }
   }
 

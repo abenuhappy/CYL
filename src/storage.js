@@ -49,22 +49,24 @@
     }
   }
 
-  // 작괘 기록 저장 (최신 순 정렬)
+  // 강독 학습 기록 저장 (최신 순 정렬)
   function saveReadingRecord(reading) {
     const state = loadState();
+    const hexNum = reading.hexNum || reading.baseNum || 1;
     const recordToSave = {
       id: reading.id,
       date: reading.date,
       createdAt: reading.createdAt,
       updatedAt: new Date().toISOString(),
       question: reading.question || '',
-      method: reading.method || 'quick',
-      throws: reading.throws,
-      baseNum: reading.baseNum,
+      method: reading.method || 'study',
+      hexNum: hexNum,
+      baseNum: hexNum,
       targetNum: reading.targetNum || null,
       changingPositions: reading.changingPositions || [],
       memo: reading.memo || '',
-      reflection: reading.reflection || ''
+      reflection: reading.reflection || '',
+      completed: Boolean(reading.completed)
     };
 
     const existingIdx = state.records.findIndex(function (r) { return r.id === recordToSave.id; });

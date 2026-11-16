@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
-  <title>오늘의 괘와 한자 공부</title>
+  <title>주역 강독</title>
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -13,8 +13,8 @@
   <header class="site-header">
     <div class="header-inner">
       <div class="brand">
-        <h1 id="page-title" tabindex="-1">오늘의 괘와 한자 공부</h1>
-        <p class="subtitle">오늘의 흐름을 살피고, 대응과 한자를 함께 익히는 하루 기록</p>
+        <h1 id="page-title" tabindex="-1">주역 강독</h1>
+        <p class="subtitle">8괘와 64괘의 괘사·대상전을 깊이 읽고 고전 한자를 익히는 매일의 배움</p>
       </div>
       <div class="header-meta">
         <span id="today-date-label" class="date-badge"></span>
@@ -23,12 +23,12 @@
 
     <nav aria-label="주요 화면" class="main-nav">
       <div role="tablist" aria-label="주요 메뉴" class="tablist">
-        <button type="button" role="tab" id="tab-today" aria-selected="true" tabindex="0">오늘의 괘</button>
+        <button type="button" role="tab" id="tab-today" aria-selected="true" tabindex="0">오늘의 강독</button>
         <button type="button" role="tab" id="tab-hanja" aria-selected="false" tabindex="-1">한자 공부</button>
         <button type="button" role="tab" id="tab-quiz" aria-selected="false" tabindex="-1">복습 퀴즈</button>
-        <button type="button" role="tab" id="tab-history" aria-selected="false" tabindex="-1">나의 기록</button>
-        <button type="button" role="tab" id="tab-encyclopedia" aria-selected="false" tabindex="-1">64괘 도감</button>
-        <button type="button" role="tab" id="tab-help" aria-selected="false" tabindex="-1">도움말</button>
+        <button type="button" role="tab" id="tab-history" aria-selected="false" tabindex="-1">나의 학습장</button>
+        <button type="button" role="tab" id="tab-encyclopedia" aria-selected="false" tabindex="-1">64괘 강독</button>
+        <button type="button" role="tab" id="tab-help" aria-selected="false" tabindex="-1">주역 입문</button>
       </div>
     </nav>
   </header>
@@ -36,174 +36,112 @@
   <main id="main-content" class="main-container">
     <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
 
-    <!-- 1. 오늘의 괘 패널 -->
+    <!-- 1. 오늘의 강독 패널 -->
     <div role="tabpanel" id="panel-today" aria-labelledby="tab-today" tabindex="0">
       <div class="panel-body">
-        <section class="card cast-card" aria-labelledby="cast-heading">
+        <!-- 괘 선택 바 -->
+        <section class="card study-selector-card" aria-labelledby="study-selector-heading">
           <div class="card-header-row">
             <div>
-              <h2 id="cast-heading">오늘의 괘 세우기</h2>
-              <p class="section-desc">오늘 살피고 싶은 질문이나 마음가짐을 적고, 한 번에 뽑거나 동전 6회를 직접 던져보세요.</p>
+              <h2 id="study-selector-heading">오늘의 주역 강독</h2>
+              <p class="section-desc">매일 한 괘씩 괘사와 대상전을 정독하고, 원문에 쓰인 고전 한자를 익힙니다.</p>
             </div>
-            <div class="cast-mode-group" role="group" aria-label="작괘 방식 선택">
-              <button type="button" id="btn-quick-cast" class="btn btn-primary">바로 괘 뽑기</button>
-              <button type="button" id="btn-coin-mode" class="btn btn-secondary">동전 6회 던지기</button>
+            <div class="inline-actions">
+              <button type="button" id="btn-today-default" class="btn btn-secondary btn-small">오늘의 추천 괘</button>
+              <button type="button" id="btn-random-hex" class="btn btn-ghost btn-small">임의 추천</button>
             </div>
           </div>
-
-          <div class="field-group">
-            <label for="question-input">오늘의 질문 또는 주제 (선택)</label>
-            <input
-              type="text"
-              id="question-input"
-              name="question"
-              maxlength="120"
-              placeholder="예: 오늘 중요한 미팅을 어떤 태도로 임할지, 혹은 오늘 하루 전반의 흐름"
-            >
-          </div>
-
-          <!-- 동전 6회 인터랙션 영역 -->
-          <div id="coin-cast-area" class="coin-cast-area" hidden>
-            <div class="coin-cast-header">
-              <h3 id="coin-step-label">1효(초효) 던지기</h3>
-              <span id="coin-progress-text" class="muted-text">0 / 6 효 완료</span>
+          <div class="study-nav-bar">
+            <button type="button" id="btn-prev-hex" class="btn btn-ghost btn-small" aria-label="이전 괘">이전 괘</button>
+            <div class="select-wrap">
+              <label for="study-hex-select" class="visually-hidden">강독할 괘 선택</label>
+              <select id="study-hex-select" class="study-hex-select"></select>
             </div>
-            <p class="coin-guide">동전 3개를 던져 음양(앞=3, 뒤=2)을 합산해 아래(초효)부터 위(상효)로 6개의 줄을 쌓습니다.</p>
-            <div class="coin-visual-row" id="coin-visual-row" aria-live="polite">
-              <div class="coin-disc" data-coin="0">?</div>
-              <div class="coin-disc" data-coin="1">?</div>
-              <div class="coin-disc" data-coin="2">?</div>
-            </div>
-            <div id="coin-preview-lines" class="coin-preview-lines"></div>
-            <div class="coin-actions">
-              <button type="button" id="btn-toss-coin" class="btn btn-primary">동전 던지기</button>
-              <button type="button" id="btn-reset-coin" class="btn btn-ghost">처음부터 다시</button>
-            </div>
+            <button type="button" id="btn-next-hex" class="btn btn-ghost btn-small" aria-label="다음 괘">다음 괘</button>
           </div>
         </section>
 
-        <!-- 작괘 결과 없을 때 안내 -->
-        <section id="today-empty-state" class="card empty-card">
-          <h2>아직 오늘의 괘를 뽑지 않았습니다</h2>
-          <p>위의 버튼을 눌러 오늘의 괘를 세우면, 본괘·변효·지괘 풀이와 실생활 대응 방안, 연계 한자 학습이 열립니다.</p>
-        </section>
-
-        <!-- 작괘 결과 표시 영역 -->
-        <div id="today-result-area" hidden>
+        <!-- 강독 본문 표시 영역 -->
+        <div id="today-result-area">
+          <!-- 괘 상징 및 개요 -->
           <section class="card reading-overview-card" aria-labelledby="reading-result-heading">
             <div class="reading-meta-bar">
               <div>
                 <span id="reading-date-tag" class="tag"></span>
-                <span id="reading-method-tag" class="tag tag-subtle"></span>
+                <span id="reading-hex-tag" class="tag tag-subtle"></span>
               </div>
-              <button type="button" id="btn-recast-today" class="btn btn-ghost btn-small">새로 뽑기</button>
+              <button type="button" id="btn-toggle-complete" class="btn btn-ghost btn-small">강독 완료 체크</button>
             </div>
-            <h2 id="reading-result-heading" class="sr-only-heading">오늘의 괘 풀이</h2>
-            <p id="reading-question-display" class="reading-question" hidden></p>
+            <h2 id="reading-result-heading" class="sr-only-heading">괘의 구조와 상징</h2>
 
-            <div class="hexagram-comparison">
-              <article class="hex-box" id="base-hex-box" aria-labelledby="base-hex-title">
-                <span class="hex-role-label">본괘 (현재 상황)</span>
+            <div class="study-hex-layout">
+              <div class="study-hex-visual-col">
                 <div id="base-hex-visual" class="hex-lines-visual" aria-hidden="true"></div>
-                <h3 id="base-hex-title" class="hex-name-heading"></h3>
+              </div>
+              <div class="study-hex-info-col">
+                <h3 id="base-hex-title" class="study-hex-name"></h3>
                 <p id="base-hex-trigrams" class="hex-trigram-sub"></p>
                 <p id="base-hex-keywords" class="keyword-row"></p>
-              </article>
-
-              <div class="hex-transition-col" id="hex-transition-col">
-                <div class="transition-arrow" aria-hidden="true">→</div>
-                <p id="changing-summary-badge" class="changing-badge"></p>
-                <p id="changing-rule-desc" class="changing-rule-desc"></p>
+                <p id="hex-summary-text" class="study-hex-summary"></p>
               </div>
-
-              <article class="hex-box" id="target-hex-box" aria-labelledby="target-hex-title">
-                <span class="hex-role-label">지괘 (변화의 방향)</span>
-                <div id="target-hex-visual" class="hex-lines-visual" aria-hidden="true"></div>
-                <h3 id="target-hex-title" class="hex-name-heading"></h3>
-                <p id="target-hex-trigrams" class="hex-trigram-sub"></p>
-                <p id="target-hex-keywords" class="keyword-row"></p>
-              </article>
             </div>
           </section>
 
-          <!-- 핵심 의미 및 변효 지침 -->
-          <section class="card interpretation-card" aria-labelledby="meaning-heading">
-            <h2 id="meaning-heading">괘의 의미와 변효 지침</h2>
-            <p id="hex-summary-text" class="lead-text"></p>
-            <div class="gua-quote-box">
-              <span class="quote-label">괘사 핵심</span>
-              <p id="hex-guatext" class="quote-text"></p>
+          <!-- 괘사 (卦辭) 강독 -->
+          <section class="card classics-reading-card" aria-labelledby="gua-heading">
+            <div class="card-header-row">
+              <div>
+                <span class="classic-badge">卦辭</span>
+                <h2 id="gua-heading">괘사 (卦辭)</h2>
+              </div>
             </div>
-            <div id="hex-classics-block" class="classics-block" hidden></div>
-
-            <div id="changing-lines-section" class="changing-lines-section" hidden>
-              <h3>오늘 주목할 변효</h3>
-              <div id="changing-lines-list" class="changing-lines-list"></div>
-            </div>
-
-            <details class="all-lines-details">
-              <summary>본괘 6효 전체 말씀 보기</summary>
-              <div id="all-lines-list" class="all-lines-list"></div>
-            </details>
-          </section>
-
-          <!-- 실생활 대응 방안 -->
-          <section class="card advice-card" aria-labelledby="advice-heading">
-            <h2 id="advice-heading">오늘의 대응 방안</h2>
-            <div class="advice-grid">
-              <article class="advice-item">
-                <h3>오늘의 태도</h3>
-                <p id="advice-attitude"></p>
-              </article>
-              <article class="advice-item">
-                <h3>업무와 결정</h3>
-                <p id="advice-work"></p>
-              </article>
-              <article class="advice-item">
-                <h3>대인관계</h3>
-                <p id="advice-relationship"></p>
-              </article>
-              <article class="advice-item advice-caution">
-                <h3>주의할 점</h3>
-                <p id="advice-caution"></p>
-              </article>
+            <p class="section-desc">괘 전체의 성격과 나아갈 때, 지켜야 할 바른 원칙을 일러줍니다.</p>
+            <div class="classic-quote-box">
+              <p id="hex-gua-original" class="classic-original" lang="zh-Hant"></p>
+              <p id="hex-gua-reading" class="classic-reading"></p>
+              <div class="classic-divider" aria-hidden="true"></div>
+              <p id="hex-gua-meaning" class="classic-meaning"></p>
             </div>
           </section>
 
-          <!-- 오늘의 한자 미리보기 -->
+          <!-- 대상전 (大象傳) 강독 -->
+          <section class="card classics-reading-card" aria-labelledby="daxiang-heading">
+            <div class="card-header-row">
+              <div>
+                <span class="classic-badge classic-badge-daxiang">大象傳</span>
+                <h2 id="daxiang-heading">대상전 (大象傳) — 자연의 상징과 군자의 처신</h2>
+              </div>
+            </div>
+            <p class="section-desc">상괘와 하괘가 이루는 대자연의 형상을 관찰하고 군자가 본받을 행동 양식을 풀이합니다.</p>
+            <div class="classic-quote-box daxiang-quote-box">
+              <p id="hex-daxiang-original" class="classic-original" lang="zh-Hant"></p>
+              <p id="hex-daxiang-reading" class="classic-reading"></p>
+              <div class="classic-divider" aria-hidden="true"></div>
+              <p id="hex-daxiang-meaning" class="classic-meaning"></p>
+            </div>
+          </section>
+
+          <!-- 원문 속 고전 한자 배움터 -->
           <section class="card today-hanja-card" aria-labelledby="today-hanja-heading">
             <div class="card-header-row">
               <div>
-                <h2 id="today-hanja-heading">오늘의 괘 한자 공부</h2>
-                <p class="section-desc">오늘 뽑은 괘명과 상하괘에 담긴 한자를 가볍게 익혀보세요.</p>
+                <h2 id="today-hanja-heading">원문 속 핵심 한자 공부</h2>
+                <p class="section-desc">괘사와 대상전에 등장하는 핵심 한자의 자원(字源), 부수, 획수, 주역에서의 뜻을 살펴봅니다.</p>
               </div>
               <div class="inline-actions">
-                <button type="button" id="btn-go-hanja-tab" class="btn btn-secondary btn-small">상세 풀이 보기</button>
+                <button type="button" id="btn-mark-today-studied" class="btn btn-secondary btn-small">이 한자들 복습장에 담기</button>
                 <button type="button" id="btn-go-quiz-today" class="btn btn-primary btn-small">오늘 한자 퀴즈</button>
               </div>
             </div>
             <div id="today-hanja-preview" class="hanja-chip-grid"></div>
           </section>
 
-          <!-- 나의 대응 메모 및 저녁 회고 -->
-          <section class="card journal-card" aria-labelledby="journal-heading">
-            <h2 id="journal-heading">나의 대응 메모 및 회고</h2>
-            <form id="journal-form">
-              <div class="field-group">
-                <label for="memo-input">오늘의 대응 다짐</label>
-                <span id="memo-hint" class="field-hint">괘의 조언을 바탕으로 오늘 실제로 실천할 한 가지를 적어보세요.</span>
-                <textarea id="memo-input" name="memo" rows="3" aria-describedby="memo-hint" placeholder="예: 서두르지 않고 오후 미팅 전에 상대 입장을 먼저 경청하기"></textarea>
-              </div>
-              <div class="field-group">
-                <label for="reflection-input">저녁 회고</label>
-                <span id="reflection-hint" class="field-hint">하루를 마친 뒤 실제로 괘의 흐름이 어떻게 느껴졌는지 기록해 두세요.</span>
-                <textarea id="reflection-input" name="reflection" rows="3" aria-describedby="reflection-hint" placeholder="예: 한 박자 기다렸더니 오해가 자연스럽게 풀렸다."></textarea>
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="btn btn-primary">기록 저장하기</button>
-                <span id="journal-save-feedback" class="save-feedback" aria-live="polite"></span>
-              </div>
-            </form>
+          <!-- 6효(爻辭) 강독 살펴보기 -->
+          <section class="card" aria-labelledby="lines-heading">
+            <details class="all-lines-details">
+              <summary id="lines-heading">6효(爻辭) 단계별 해설 살펴보기</summary>
+              <div id="all-lines-list" class="all-lines-list"></div>
+            </details>
           </section>
         </div>
       </div>
@@ -215,36 +153,36 @@
         <section class="card" aria-labelledby="hanja-today-title">
           <div class="card-header-row">
             <div>
-              <h2 id="hanja-today-title">오늘의 괘 연계 한자</h2>
-              <p class="section-desc">오늘 뽑은 본괘·지괘에 포함된 한자의 음·훈·부수와 주역 풀이를 집중 학습합니다.</p>
+              <h2 id="hanja-today-title">강독 괘 연계 한자</h2>
+              <p class="section-desc">현재 강독 중인 괘의 괘명과 괘사·대상전에 포함된 한자의 음·훈·부수와 주역 풀이를 집중 학습합니다.</p>
             </div>
-            <button type="button" id="btn-mark-today-studied" class="btn btn-secondary btn-small">오늘 한자 복습장에 담기</button>
+            <button type="button" id="btn-mark-today-studied-sub" class="btn btn-secondary btn-small">학습 복습장에 담기</button>
           </div>
           <div id="hanja-today-grid" class="hanja-detail-grid"></div>
         </section>
 
         <section class="card" aria-labelledby="trigram-study-title">
-          <h2 id="trigram-study-title">팔괘(八卦) 기본 한자와 상징</h2>
-          <p class="section-desc">주역 64괘는 아래 8가지 기본 괘(팔괘)가 위아래로 만나 이루어집니다.</p>
+          <h2 id="trigram-study-title">팔괘(八卦) 기본 한자와 자연 상징</h2>
+          <p class="section-desc">주역 64괘는 아래 8가지 기본 괘(팔괘)가 위아래로 만나 만물의 흐름을 이룹니다.</p>
           <div id="trigram-study-grid" class="trigram-grid"></div>
         </section>
 
         <section class="card" aria-labelledby="hanja-dict-title">
-          <h2 id="hanja-dict-title">주역 핵심 한자 사전</h2>
+          <h2 id="hanja-dict-title">주역 433자 고전 한자 사전</h2>
           <search>
             <form id="hanja-filter-form" class="filter-bar">
               <div class="field-group inline-field">
                 <label for="hanja-search-input">한자, 음, 뜻 검색</label>
-                <input type="search" id="hanja-search-input" name="hanjaQuery" placeholder="예: 겸손, 乾, 정">
+                <input type="search" id="hanja-search-input" name="hanjaQuery" placeholder="예: 겸손, 乾, 정, 하늘">
               </div>
               <div class="field-group inline-field">
                 <label for="hanja-category-select">분류</label>
                 <select id="hanja-category-select" name="hanjaCategory">
-                  <option value="all">전체</option>
-                  <option value="팔괘">팔괘 한자</option>
-                  <option value="괘명">64괘 괘명 한자</option>
-                  <option value="주역핵심">괘사 핵심 어휘</option>
-                  <option value="괘사대상">괘사·대상전 핵심 한자</option>
+                  <option value="all">전체 한자 (433자)</option>
+                  <option value="팔괘">팔괘 한자 (16자)</option>
+                  <option value="괘명">64괘 괘명 한자 (65자)</option>
+                  <option value="주역핵심">괘사 핵심 어휘 (45자)</option>
+                  <option value="괘사대상">괘사·대상전 고전 한자 (307자)</option>
                 </select>
               </div>
             </form>
@@ -273,12 +211,12 @@
             <div class="field-group">
               <label for="quiz-scope-select">출제 범위</label>
               <select id="quiz-scope-select" name="quizScope">
-                <option value="today">오늘의 괘 한자</option>
-                <option value="studied">지금까지 본 한자</option>
+                <option value="today">오늘 강독 괘 한자</option>
+                <option value="studied">지금까지 공부한 한자</option>
                 <option value="wrong">틀린 한자 다시 풀기</option>
-                <option value="trigrams">팔괘 한자</option>
-                <option value="classics">괘사·대상전 핵심 한자</option>
-                <option value="all">전체 핵심 한자</option>
+                <option value="trigrams">팔괘 한자 (16자)</option>
+                <option value="classics">괘사·대상전 고전 한자</option>
+                <option value="all">전체 고전 한자 (433자)</option>
               </select>
             </div>
             <div class="quiz-start-wrap">
@@ -293,17 +231,17 @@
       </div>
     </div>
 
-    <!-- 4. 나의 기록 패널 -->
+    <!-- 4. 나의 학습장 패널 -->
     <div role="tabpanel" id="panel-history" aria-labelledby="tab-history" hidden="until-found">
       <div class="panel-body">
         <section class="card" aria-labelledby="history-title">
           <div class="card-header-row">
             <div>
-              <h2 id="history-title">나의 주역 기록장</h2>
-              <p class="section-desc">날짜별로 뽑은 괘와 대응 메모, 저녁 회고가 브라우저에 안전하게 보관됩니다.</p>
+              <h2 id="history-title">나의 주역 학습장</h2>
+              <p class="section-desc">날짜별 강독 완료 이력과 한자 학습 진도가 브라우저에 안전하게 보관됩니다.</p>
             </div>
             <div class="inline-actions">
-              <button type="button" id="btn-export-backup" class="btn btn-secondary btn-small">기록 백업 내보내기</button>
+              <button type="button" id="btn-export-backup" class="btn btn-secondary btn-small">학습 기록 백업 내보내기</button>
               <label for="import-backup-input" class="btn btn-ghost btn-small file-btn-label">백업 가져오기</label>
               <input type="file" id="import-backup-input" accept="application/json,.json" class="visually-hidden">
             </div>
@@ -314,8 +252,8 @@
           <search>
             <form id="history-filter-form" class="filter-bar">
               <div class="field-group inline-field">
-                <label for="history-search-input">괘명, 질문, 메모 검색</label>
-                <input type="search" id="history-search-input" name="historyQuery" placeholder="예: 겸손, 미팅, 乾">
+                <label for="history-search-input">괘명, 번호, 한자 검색</label>
+                <input type="search" id="history-search-input" name="historyQuery" placeholder="예: 15, 겸, 乾, 자강불식">
               </div>
               <div class="field-group inline-field">
                 <label for="history-month-input">월별 필터</label>
@@ -329,18 +267,18 @@
       </div>
     </div>
 
-    <!-- 5. 64괘 도감 패널 -->
+    <!-- 5. 64괘 강독 도감 패널 -->
     <div role="tabpanel" id="panel-encyclopedia" aria-labelledby="tab-encyclopedia" hidden="until-found">
       <div class="panel-body">
         <section class="card" aria-labelledby="encyclopedia-title">
-          <h2 id="encyclopedia-title">주역 64괘 전체 도감</h2>
-          <p class="section-desc">원하는 괘를 직접 찾아 의미와 대응 방안, 6효와 한자를 살펴볼 수 있습니다.</p>
+          <h2 id="encyclopedia-title">주역 64괘 강독 도감</h2>
+          <p class="section-desc">64괘 전체를 상괘·하괘 또는 검색어로 찾아 괘사·대상전과 6효 전체를 살펴볼 수 있습니다.</p>
 
           <search>
             <form id="hex-filter-form" class="filter-bar">
               <div class="field-group inline-field">
                 <label for="hex-search-input">괘 번호, 괘명, 한자, 키워드 검색</label>
-                <input type="search" id="hex-search-input" name="hexQuery" placeholder="예: 15, 겸, 泰, 소통">
+                <input type="search" id="hex-search-input" name="hexQuery" placeholder="예: 15, 겸, 泰, 소통, 자강불식">
               </div>
               <div class="field-group inline-field">
                 <label for="hex-upper-select">상괘(위)</label>
@@ -363,104 +301,135 @@
       </div>
     </div>
 
-    <!-- 6. 도움말 패널 -->
+    <!-- 6. 주역 입문 패널 -->
     <div role="tabpanel" id="panel-help" aria-labelledby="tab-help" hidden="until-found">
       <div class="panel-body">
-        <section class="card" aria-labelledby="help-flow-title">
-          <h2 id="help-flow-title">본괘 · 변효 · 지괘란</h2>
-          <p class="section-desc">주역의 한 괘는 아래에서 위로 쌓인 6개의 줄(효)로 이루어집니다. 한 번의 작괘에서 현재 위치와 변화의 방향을 함께 읽습니다.</p>
+        <section class="card" aria-labelledby="help-nature-title">
+          <h2 id="help-nature-title">주역(周易)이란 무엇인가</h2>
+          <p class="section-desc">주역은 미신이나 미래를 예언하는 점술이 아니라, 자연의 순환 법칙을 관찰하여 인간이 마땅히 나아가고 물러설 때를 분별하고 자기 수양을 이루도록 이끄는 동양 최고의 철학 고전입니다.</p>
           <div class="help-grid-3">
             <article class="help-concept-box">
-              <h3>본괘 (本卦)</h3>
-              <p class="help-sub">현재 내가 놓인 상황과 출발점</p>
-              <p>방금 뽑은 원래의 괘입니다. 오늘 하루의 기본 배경, 현재 처한 여건과 마음가짐을 살펴보는 기준이 됩니다.</p>
+              <h3>변화의 이치 (易)</h3>
+              <p class="help-sub">세상에 변하지 않는 것은 없다</p>
+              <p>주역의 역(易)은 변화를 뜻합니다. 밤이 가면 낮이 오고 겨울이 가면 봄이 오듯, 모든 상황은 극에 이르면 반대로 돌아섭니다(물극필반 物極必反). 어려움 속에서도 희망을 준비하고 번영 속에서도 겸손을 잃지 않는 지혜입니다.</p>
             </article>
             <article class="help-concept-box is-accent">
-              <h3>변효 (變爻)</h3>
-              <p class="help-sub">오늘의 핵심 전환점과 대응 지침</p>
-              <p>6개의 줄 가운데 음양이 반대로 바뀌려는 기운이 실린 줄입니다. 주역에서는 이 변효의 말씀을 오늘 가장 우선해야 할 행동 지침으로 삼습니다.</p>
+              <h3>상징의 관찰 (象)</h3>
+              <p class="help-sub">대자연의 형상에서 도리를 배우다</p>
+              <p>하늘, 땅, 우레, 바람, 물, 불, 산, 연못 등 대자연의 현상을 8괘의 기호로 압축하여, 우리가 마주한 현실의 여건과 기운을 객관적으로 비추어 봅니다.</p>
             </article>
             <article class="help-concept-box">
-              <h3>지괘 (之卦)</h3>
-              <p class="help-sub">변화 후 흘러가는 방향과 결과</p>
-              <p>본괘에서 변효의 음양만 반대로 뒤집혀 만들어지는 다음 괘입니다. 상황이 앞으로 어떤 모습으로 전개될지 방향성을 보여줍니다.</p>
+              <h3>군자의 처신 (君子以)</h3>
+              <p class="help-sub">바른 행동과 덕행의 실천</p>
+              <p>대상전(大象傳)은 자연의 상을 관찰한 뒤 항상 '군자는 이를 본받아~(君子以...)'로 행동 강령을 제시합니다. 운명에 휘둘리는 것이 아니라, 주체적으로 덕을 닦아 바른 선택을 내리는 것이 주역의 목적입니다.</p>
             </article>
-          </div>
-          <div class="gua-quote-box help-analogy-box">
-            <span class="quote-label">한눈에 이해하는 흐름</span>
-            <p class="quote-text">본괘(현재 위치) → 변효(오늘의 대응 포인트) → 지괘(나아갈 방향)</p>
           </div>
         </section>
 
-        <section class="card" aria-labelledby="help-cast-title">
-          <h2 id="help-cast-title">본괘와 지괘를 뽑는 방법 (동전 삼전법)</h2>
-          <p class="section-desc">동전 3개를 1효(맨 아래)부터 6효(맨 위)까지 총 6번 던집니다. 앞면은 3, 뒷면은 2로 계산해 합계를 냅니다.</p>
+        <section class="card" aria-labelledby="help-trigram-title">
+          <h2 id="help-trigram-title">음양(陰陽)과 팔괘(八卦)의 자연 상징</h2>
+          <p class="section-desc">음(⚋, 끊어진 줄)과 양(⚊, 이어진 줄) 세 개가 쌓여 8가지 기본 괘(소성괘)를 이룹니다.</p>
           <div class="table-wrap">
             <table class="guide-table">
-              <caption>동전 3개 합계에 따른 효 판정과 본괘·지괘 변화 규칙</caption>
+              <caption>팔괘의 명칭, 자연물, 성질 및 상징적 의미</caption>
               <thead>
                 <tr>
-                  <th scope="col">동전 조합</th>
-                  <th scope="col">합계</th>
-                  <th scope="col">명칭</th>
-                  <th scope="col">본괘의 줄</th>
-                  <th scope="col">변효 여부</th>
-                  <th scope="col">지괘에서의 줄</th>
+                  <th scope="col">팔괘</th>
+                  <th scope="col">한자</th>
+                  <th scope="col">자연물</th>
+                  <th scope="col">성질(덕)</th>
+                  <th scope="col">형상(효)</th>
+                  <th scope="col">상징하는 지혜</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row">뒤 + 뒤 + 뒤 (2+2+2)</th>
-                  <td>6</td>
-                  <td>노음 (老陰)</td>
-                  <td>음효 (끊긴 줄)</td>
-                  <td>변효 (음에서 양으로)</td>
-                  <td>양효 (이은 줄)</td>
+                  <th scope="row">건괘 (乾)</th>
+                  <td>乾 (하늘 건)</td>
+                  <td>하늘 (天)</td>
+                  <td>굳셈 (健)</td>
+                  <td>☰ (세 양효)</td>
+                  <td>쉼 없이 바르게 운행하는 순수한 창조와 자강불식의 힘</td>
                 </tr>
                 <tr>
-                  <th scope="row">앞 + 뒤 + 뒤 (3+2+2)</th>
-                  <td>7</td>
-                  <td>소양 (少陽)</td>
-                  <td>양효 (이은 줄)</td>
-                  <td>변하지 않음</td>
-                  <td>양효 유지</td>
+                  <th scope="row">곤괘 (坤)</th>
+                  <td>坤 (땅 곤)</td>
+                  <td>땅 (地)</td>
+                  <td>순함 (順)</td>
+                  <td>☷ (세 음효)</td>
+                  <td>만물을 너그럽게 품고 길러내는 두터운 포용과 유순함</td>
                 </tr>
                 <tr>
-                  <th scope="row">앞 + 앞 + 뒤 (3+3+2)</th>
-                  <td>8</td>
-                  <td>소음 (少陰)</td>
-                  <td>음효 (끊긴 줄)</td>
-                  <td>변하지 않음</td>
-                  <td>음효 유지</td>
+                  <th scope="row">진괘 (震)</th>
+                  <td>震 (우레 진)</td>
+                  <td>우레 (雷)</td>
+                  <td>움직임 (動)</td>
+                  <td>☳ (일양 이음)</td>
+                  <td>잠든 대지를 깨우는 역동적인 시작과 분발, 각성</td>
                 </tr>
                 <tr>
-                  <th scope="row">앞 + 앞 + 앞 (3+3+3)</th>
-                  <td>9</td>
-                  <td>노양 (老陽)</td>
-                  <td>양효 (이은 줄)</td>
-                  <td>변효 (양에서 음으로)</td>
-                  <td>음효 (끊긴 줄)</td>
+                  <th scope="row">손괘 (巽)</th>
+                  <td>巽 (바람 손)</td>
+                  <td>바람 (風)</td>
+                  <td>스며듦 (入)</td>
+                  <td>☴ (이양 일음)</td>
+                  <td>낮은 곳으로 부드럽게 스며들어 뜻을 널리 퍼뜨리는 유연함</td>
+                </tr>
+                <tr>
+                  <th scope="row">감괘 (坎)</th>
+                  <td>坎 (물 감)</td>
+                  <td>물 (水)</td>
+                  <td>험난함 (陷)</td>
+                  <td>☵ (외음 내양)</td>
+                  <td>어려운 구덩이를 만나도 멈추지 않고 중심을 지키는 끈기</td>
+                </tr>
+                <tr>
+                  <th scope="row">리괘 (離)</th>
+                  <td>離 (불 리)</td>
+                  <td>불 (火)</td>
+                  <td>밝음 (麗)</td>
+                  <td>☲ (외양 내음)</td>
+                  <td>사물을 환하게 비추고 바른 대상에 붙어 빛을 내는 지혜</td>
+                </tr>
+                <tr>
+                  <th scope="row">간괘 (艮)</th>
+                  <td>艮 (산 간)</td>
+                  <td>산 (山)</td>
+                  <td>그침 (止)</td>
+                  <td>☶ (일양 이음)</td>
+                  <td>우뚝 선 산처럼 나아갈 때와 멈출 때를 분별하는 절제</td>
+                </tr>
+                <tr>
+                  <th scope="row">태괘 (兌)</th>
+                  <td>兌 (연못 태)</td>
+                  <td>연못 (澤)</td>
+                  <td>기쁨 (說)</td>
+                  <td>☱ (이양 일음)</td>
+                  <td>주변을 윤택하게 적시며 마음을 열어 나누는 화합과 소통</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p class="muted-text help-footnote">모든 줄이 7 또는 8로 나와 변효가 0개일 때는 지괘로 이동하지 않고 본괘의 괘사를 중심으로 풀이합니다.</p>
+        </section>
+
+        <section class="card" aria-labelledby="help-structure-title">
+          <h2 id="help-structure-title">64괘의 구성과 괘사·대상전 읽는 법</h2>
+          <p class="section-desc">주역 64괘는 팔괘 두 개가 상괘(위)와 하괘(아래)로 포개져 완성됩니다.</p>
+          <div class="help-rule-pair">
+            <div class="help-rule-box">
+              <h3>괘사 (卦辭) — 괘 전체의 원칙</h3>
+              <p>문왕(文王)이 지은 것으로 전해지는 괘사는 괘 전체의 성격과 나아갈 방향, 지켜야 할 원칙을 제시합니다. '원형이정(元亨利貞)', '이섭대천(利涉大川)'처럼 큰 결정을 내릴 때 마음에 새겨야 할 큰 틀의 기준이 담겨 있습니다.</p>
+            </div>
+            <div class="help-rule-box">
+              <h3>대상전 (大象傳) — 자연과 군자의 실천</h3>
+              <p>공자(孔子)의 십익(十翼)에 속하는 대상전은 상괘와 하괘의 자연물(예: 하늘 아래 산 = 천산돈)을 먼저 밝히고, "군자는 이를 본받아(君子以)..."로 시작하여 일상 속에서 군자가 실천해야 할 구체적인 처신과 수양의 자세를 가르칩니다.</p>
+            </div>
+          </div>
         </section>
 
         <section class="card" aria-labelledby="help-lines-title">
-          <h2 id="help-lines-title">6효 호칭 읽는 법 (초구·육삼·상구 등)</h2>
-          <p class="section-desc">각 효의 이름은 자리 순서와 음양 숫자를 조합해 부릅니다. 양효는 구(九), 음효는 육(六)으로 표기합니다.</p>
-          <div class="help-rule-pair">
-            <div class="help-rule-box">
-              <h3>양효는 구(九), 음효는 육(六)</h3>
-              <p>양의 대표 숫자 9를 써서 양효를 구(九)라 하고, 음의 대표 숫자 6을 써서 음효를 육(六)이라 부릅니다.</p>
-            </div>
-            <div class="help-rule-box">
-              <h3>맨 아래(초)와 맨 위(상)는 위치가 먼저</h3>
-              <p>1효와 6효는 초구·초육, 상구·상육처럼 위치를 앞에 두고, 2~5효는 구이·육삼·육사·구오처럼 음양 숫자를 앞에 둡니다.</p>
-            </div>
-          </div>
-
+          <h2 id="help-lines-title">6효의 위치와 호칭 (초구·육이·상구 등)</h2>
+          <p class="section-desc">각 괘는 아래에서 위로 6개의 줄(효)로 이루어지며, 시간의 흐름과 상황의 성숙 단계를 나타냅니다. 양효는 구(九), 음효는 육(六)으로 표기합니다.</p>
           <div class="table-wrap">
             <table class="guide-table">
               <caption>아래 1효부터 위 6효까지의 호칭과 자리별 의미</caption>
@@ -477,37 +446,37 @@
                   <th scope="row">6효 (맨 위)</th>
                   <td>상구 (上九)</td>
                   <td>상육 (上六)</td>
-                  <td>정점을 지난 마무리, 물러남 또는 새로운 전환점</td>
+                  <td>정점을 지나 마무리하고 다음 국면을 준비하는 초연한 자리</td>
                 </tr>
                 <tr>
                   <th scope="row">5효</th>
                   <td>구오 (九五)</td>
                   <td>육오 (六五)</td>
-                  <td>전체를 이끄는 중심 자리, 가장 안정된 실행과 책임</td>
+                  <td>전체를 이끄는 중심 자리, 가장 성숙한 실행과 공적인 책임</td>
                 </tr>
                 <tr>
                   <th scope="row">4효</th>
                   <td>구사 (九四)</td>
                   <td>육사 (六四)</td>
-                  <td>바깥 무대에 막 진입한 자리, 보좌와 신중한 경계</td>
+                  <td>바깥 세계로 진입한 자리, 지도자를 보좌하며 신중히 경계함</td>
                 </tr>
                 <tr>
                   <th scope="row">3효</th>
                   <td>구삼 (九三)</td>
                   <td>육삼 (六三)</td>
-                  <td>안(하괘)에서 밖(상괘)으로 넘어가는 고비와 긴장</td>
+                  <td>안에서 밖으로 넘어가는 전환점, 고비와 과도기의 긴장</td>
                 </tr>
                 <tr>
                   <th scope="row">2효</th>
                   <td>구이 (九二)</td>
                   <td>육이 (六二)</td>
-                  <td>안쪽의 중심, 내실과 실무 균형을 잡는 자리</td>
+                  <td>안쪽 세계의 중심 자리, 내실을 다지고 실무의 균형을 잡음</td>
                 </tr>
                 <tr>
                   <th scope="row">1효 (맨 아래)</th>
                   <td>초구 (初九)</td>
                   <td>초육 (初六)</td>
-                  <td>막 시작하는 출발점, 기반 다지기와 신중한 첫걸음</td>
+                  <td>막 출발하는 시작점, 섣불리 나서지 않고 기반을 닦는 겸손</td>
                 </tr>
               </tbody>
             </table>
@@ -515,23 +484,23 @@
         </section>
 
         <section class="card" aria-labelledby="help-terms-title">
-          <h2 id="help-terms-title">괘 풀이에 자주 나오는 기본 한자 용어</h2>
+          <h2 id="help-terms-title">주역 고전의 4대 덕목과 핵심 용어</h2>
           <div class="help-term-grid">
             <article class="help-term-item">
               <h3>원형이정 (元亨利貞)</h3>
-              <p>크게 시작하고(元), 막힘없이 통하며(亨), 모두에게 이롭고(利), 바른 원칙을 지킨다(貞)는 주역의 4대 덕목입니다.</p>
+              <p>크게 시작하고(元), 막힘없이 통하며(亨), 모두에게 이롭고(利), 바른 원칙을 지킨다(貞)는 주역 최고의 4대 덕목입니다. 사계절(봄·여름·가을·겨울)과 사단(인·의·예·지)에 짝합니다.</p>
             </article>
             <article class="help-term-item">
               <h3>길 (吉) 과 흉 (凶)</h3>
-              <p>길은 순리에 맞아 결과가 좋음을, 흉은 무리하거나 어긋나 경계가 필요함을 뜻합니다.</p>
+              <p>길은 자연과 도리의 순리에 맞아 마음이 편안하고 결과가 좋음이며, 흉은 억지를 부리거나 순리를 거슬러 위태로워짐을 경계하는 가르침입니다.</p>
             </article>
             <article class="help-term-item">
               <h3>회 (悔) 와 린 (吝)</h3>
-              <p>회는 잘못을 뉘우쳐 나아지는 방향이고, 린은 작은 것에 인색하거나 머뭇거려 답답해지는 상태입니다.</p>
+              <p>회는 잘못을 뉘우치고 반성하여 길(吉)로 나아가는 계기이고, 린은 인색하거나 머뭇거려 흉(凶)으로 빠져드는 옹졸한 상태입니다.</p>
             </article>
             <article class="help-term-item">
-              <h3>무구 (无咎) 와 려 (厲)</h3>
-              <p>무구는 허물이나 탓이 없음을, 려는 위태로운 고비이므로 긴장을 늦추지 말아야 함을 일러줍니다.</p>
+              <h3>무구 (无咎)</h3>
+              <p>허물이 없다는 뜻입니다. 완벽해서 허물이 없는 것이 아니라, 잘못을 깨닫고 즉시 고쳐 더 큰 허물에 이르지 않음을 높이 평가하는 주역 특유의 현실적 지혜입니다.</p>
             </article>
           </div>
         </section>
@@ -540,7 +509,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>모든 주역 기록과 한자 학습 진도는 현재 사용 중인 브라우저에 로컬 저장됩니다. 중요한 기록은 나의 기록 탭에서 백업 파일로 저장해 두실 수 있습니다.</p>
+    <p>모든 주역 강독 기록과 한자 학습 진도는 현재 사용 중인 브라우저에 로컬 저장됩니다. 중요한 기록은 나의 학습장 탭에서 백업 파일로 저장해 두실 수 있습니다.</p>
   </footer>
 
   <!-- 64괘 상세 보기 네이티브 다이얼로그 -->

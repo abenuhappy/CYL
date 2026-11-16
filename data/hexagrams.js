@@ -4,6 +4,7 @@
 
   const ns = global.DailyIChing || {};
   const TRIGRAMS = ns.TRIGRAMS || {};
+  const classics = ns.HEXAGRAM_CLASSICS || {};
   const part1 = ns.HEXAGRAMS_PART_1 || [];
   const part2 = ns.HEXAGRAMS_PART_2 || [];
 
@@ -12,11 +13,26 @@
     const upperTrigram = TRIGRAMS[hex.upper];
     // 효 배치는 아래(초효)에서 위(상효) 순서
     const linesBinary = lowerTrigram.lines.concat(upperTrigram.lines);
-    return Object.assign({}, hex, {
+    const classic = classics[hex.num] || {};
+    const classicHanja = classic.classicHanja || [];
+    // 괘명, 괘사 원문, 대상전 원문에서 등장하는 모든 고전 한자를 원문 등장 순서대로 추출 및 통합
+    const textSources = [
+      hex.hanjaName || '',
+      classic.guaOriginal || '',
+      classic.daXiangOriginal || '',
+      (hex.hanja || []).join(''),
+      (classicHanja || []).join('')
+    ].join(' ');
+    const extractedChars = textSources.match(/[\u4E00-\u9FFF]/g) || [];
+    const combinedHanja = Array.from(new Set(extractedChars));
+
+    return Object.assign({}, hex, classic, {
       linesBinary: linesBinary,
       bits: linesBinary.join(''),
       upperTrigram: upperTrigram,
-      lowerTrigram: lowerTrigram
+      lowerTrigram: lowerTrigram,
+      hanja: combinedHanja,
+      classicHanja: classicHanja
     });
   });
 
